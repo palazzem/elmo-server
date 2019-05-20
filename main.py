@@ -1,5 +1,5 @@
-from server.api import api
+from server.api import create
 
 
 # Use AppEngine default entrypoint (gunicorn)
-app = api
+app = create()
