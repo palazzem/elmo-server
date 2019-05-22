@@ -7,7 +7,7 @@ from elmo.api.client import ElmoClient
 from elmo.api.exceptions import APIException, PermissionDenied
 
 from .conf import settings
-from .hooks import authorization_required
+from .hooks import authorization_required, code_required
 
 
 log = logging.getLogger(__name__)
@@ -58,6 +58,7 @@ class Authentication(object):
 
 
 @falcon.before(authorization_required)
+@falcon.before(code_required)
 class AlarmsResource(object):
     """Alarms resource to arm/disarm all Elmo System alarms.
 
@@ -94,7 +95,7 @@ class AlarmsResource(object):
             log.error("503 ServiceUnavailable: {}".format(e))
             raise falcon.HTTPServiceUnavailable(description="".format(e))
 
-    def on_put(self, req, resp, token):
+    def on_put(self, req, resp, token, code):
         """Arm all alarms after gaining the system lock. Once the operation is
         completed with success, the system lock is released.
         The endpoint requires an `Authorization` header with a valid bearer
@@ -115,17 +116,13 @@ class AlarmsResource(object):
         Returns:
             A JSON response with the alarms status.
         """
-        code = req.media.get("code")
-        if code is None:
-            raise falcon.HTTPBadRequest(description="`code` is a required field")
-
         with self._acquire_system_lock(token, code) as client:
             client.arm()
 
         resp.status = falcon.HTTP_200
         resp.media = {"alarms_armed": True}
 
-    def on_delete(self, req, resp, token):
+    def on_delete(self, req, resp, token, code):
         """Disarm all alarms after gaining the system lock. Once the operation is
         completed with success, the system lock is released.
         The endpoint requires an `Authorization` header with a valid bearer
@@ -146,10 +143,6 @@ class AlarmsResource(object):
         Returns:
             A JSON response with the alarms status.
         """
-        code = req.media.get("code")
-        if code is None:
-            raise falcon.HTTPBadRequest(description="`code` is a required field")
-
         with self._acquire_system_lock(token, code) as client:
             client.disarm()
 
