@@ -1,6 +1,6 @@
 import falcon
 
-from .resources import Authentication
+from .resources import Authentication, AlarmsResource
 
 
 def create():
@@ -12,5 +12,6 @@ def create():
     """
     # Initialize the API
     api = falcon.API()
-    api.add_route("/api/v0/auth", Authentication())
+    api.add_route("/api/v0/auth/", Authentication())
+    api.add_route("/api/v0/alarms/", AlarmsResource())
     return api
