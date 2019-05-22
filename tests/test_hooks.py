@@ -24,3 +24,18 @@ def test_authorization_success(hooks_client):
     result = hooks_client.simulate_get("/hooks/authorization_required", headers=headers)
     assert result.status_code == 200
     assert result.json == {"token": "127d9a48-927a-43f3-a3e3-842f3f2b7393"}
+
+
+def test_code_is_present(hooks_client):
+    """Should return 200 if the code is present in the payload"""
+    result = hooks_client.simulate_get(
+        "/hooks/code_required", json={"code": "1234567890"}
+    )
+    assert result.status_code == 200
+    assert result.json == {"code": "1234567890"}
+
+
+def test_code_is_not_present(hooks_client):
+    """Should return 400 if the code is missing from the payload"""
+    result = hooks_client.simulate_get("/hooks/code_required", json={})
+    assert result.status_code == 400
